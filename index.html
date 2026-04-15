@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <!--
+    ============================================================
+    TO-DO LIST — Desafio IA no Desenvolvimento de Software
+    Prof. Msc. Alexander Gobbato
+    Aluno: [SEU NOME AQUI]
+    ============================================================
+    ESTRUTURA DO ARQUIVO:
+    1. <head>    → Metadados, fontes e variáveis CSS
+    2. <body>    → Interface visual (formulário + lista)
+    3. <script>  → Lógica de adição, conclusão e remoção
+    ============================================================
+  -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>To-Do List ✅</title>
+
+  <!-- Importando fontes do Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+    /* =============================================
+       VARIÁVEIS GLOBAIS — Paleta de cores e tokens
+       ============================================= */
+    :root {
+      --bg: #0f0f13;
+      --surface: #1a1a24;
+      --border: #2a2a3a;
+      --text: #e8e8f0;
+      --muted: #7070a0;
+
+      /* Cores de prioridade */
+      --alta:  #ff4d6d;
+      --media: #ffd166;
+      --baixa: #06d6a0;
+
+      /* Sombras e raios */
+      --radius: 14px;
+      --shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+
+    /* =============================================
+       RESET E BASE
+       ============================================= */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 40px 16px 80px;
+
+      /* Textura sutil de fundo */
+      background-image: radial-gradient(ellipse at 20% 20%, #1e1030 0%, transparent 50%),
+                        radial-gradient(ellipse at 80% 80%, #0d1f2d 0%, transparent 50%);
+    }
+
+    /* =============================================
+       CONTAINER PRINCIPAL
+       ============================================= */
+    .app {
+      width: 100%;
+      max-width: 640px;
+    }
+
+    /* =============================================
+       CABEÇALHO / TÍTULO
+       ============================================= */
+    .header {
+      margin-bottom: 36px;
+      animation: fadeDown 0.6s ease both;
+    }
+
+    .header h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2rem, 6vw, 3rem);
+      font-weight: 800;
+      letter-spacing: -1px;
+      line-height: 1.1;
+
+      /* Gradiente no título */
+      background: linear-gradient(135deg, #ffffff 0%, #a0a0ff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header p {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    /* =============================================
+       FORMULÁRIO DE ENTRADA DE TAREFAS
+       ============================================= */
+    .form-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 28px;
+      box-shadow: var(--shadow);
+      animation: fadeUp 0.6s ease 0.1s both;
+    }
+
+    /* Campo de texto da tarefa */
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Label dos campos */
+    label {
+      font-size: 0.78rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    /* Input de texto */
+    input[type="text"] {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus {
+      border-color: #6060ff;
+    }
+
+    input[type="text"]::placeholder {
+      color: var(--muted);
+    }
+
+    /* =============================================
+       LINHA INFERIOR DO FORMULÁRIO (Prioridade + Botão)
+       ============================================= */
+    .form-row {
+      display: flex;
+      gap: 12px;
+      align-items: flex-end;
+      margin-top: 4px;
+    }
+
+    .select-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+    }
+
+    /* Seletor de prioridade */
+    select {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 13px 16px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      transition: border-color 0.2s;
+    }
+
+    select:focus {
+      border-color: #6060ff;
+    }
+
+    /* Botão de adicionar tarefa */
+    button.add-btn {
+      background: linear-gradient(135deg, #6060ff, #a040ff);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 14px 28px;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      white-space: nowrap;
+      box-shadow: 0 4px 20px rgba(96,96,255,0.3);
+    }
+
+    button.add-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(96,96,255,0.5);
+    }
+
+    button.add-btn:active {
+      transform: translateY(0);
+    }
+
+    /* =============================================
+       ÁREA DA LISTA DE TAREFAS
+       ============================================= */
+    .list-section {
+      animation: fadeUp 0.6s ease 0.2s both;
+    }
+
+    .list-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .list-header h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    /* Contador de tarefas */
+    .counter {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 4px 14px;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    /* Estado vazio da lista */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+    }
+
+    .empty-state span {
+      font-size: 2.5rem;
+      display: block;
+      margin-bottom: 12px;
+    }
+
+    /* =============================================
+       CADA ITEM DA LISTA
+       ============================================= */
+    .todo-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+
+      /* Borda colorida à esquerda conforme a prioridade */
+      border-left: 4px solid var(--border);
+      transition: transform 0.2s, box-shadow 0.2s;
+      animation: slideIn 0.3s ease both;
+    }
+
+    .todo-item:hover {
+      transform: translateX(4px);
+      box-shadow: var(--shadow);
+    }
+
+    /* =============================================
+       ESTILIZAÇÃO CONDICIONAL POR PRIORIDADE
+       As classes são aplicadas via JavaScript
+       ============================================= */
+    .todo-item.prioridade-alta   { border-left-color: var(--alta); }
+    .todo-item.prioridade-media  { border-left-color: var(--media); }
+    .todo-item.prioridade-baixa  { border-left-color: var(--baixa); }
+
+    /* Badge de prioridade */
+    .badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      border-radius: 6px;
+      padding: 3px 10px;
+      white-space: nowrap;
+    }
+
+    .prioridade-alta  .badge { background: rgba(255,77,109,0.15); color: var(--alta); }
+    .prioridade-media .badge { background: rgba(255,209,102,0.15); color: var(--media); }
+    .prioridade-baixa .badge { background: rgba(6,214,160,0.15); color: var(--baixa); }
+
+    /* Checkbox de conclusão */
+    .check-btn {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      background: transparent;
+      cursor: pointer;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    .check-btn:hover {
+      border-color: var(--baixa);
+    }
+
+    /* Texto da tarefa */
+    .task-text {
+      flex: 1;
+      font-size: 0.97rem;
+      line-height: 1.4;
+    }
+
+    /* =============================================
+       TAREFA CONCLUÍDA — Estilo visual diferenciado
+       ============================================= */
+    .todo-item.concluida {
+      opacity: 0.5;
+    }
+
+    .todo-item.concluida .task-text {
+      text-decoration: line-through;
+      color: var(--muted);
+    }
+
+    .todo-item.concluida .check-btn {
+      background: var(--baixa);
+      border-color: var(--baixa);
+      color: #000;
+    }
+
+    /* Botão de remover tarefa */
+    .remove-btn {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 1.1rem;
+      padding: 4px 8px;
+      border-radius: 6px;
+      transition: color 0.2s, background 0.2s;
+      flex-shrink: 0;
+    }
+
+    .remove-btn:hover {
+      color: var(--alta);
+      background: rgba(255,77,109,0.1);
+    }
+
+    /* =============================================
+       ANIMAÇÕES
+       ============================================= */
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-12px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    /* =============================================
+       RESPONSIVIDADE
+       ============================================= */
+    @media (max-width: 480px) {
+      .form-row {
+        flex-direction: column;
+      }
+
+      button.add-btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- =============================================
+       CONTAINER PRINCIPAL DA APLICAÇÃO
+       ============================================= -->
+  <main class="app">
+
+    <!-- CABEÇALHO -->
+    <header class="header">
+      <h1>To-Do List ✦</h1>
+      <p>Organize suas tarefas por prioridade</p>
+    </header>
+
+    <!-- FORMULÁRIO DE ENTRADA -->
+    <section class="form-card">
+      <div class="input-group">
+
+        <!-- Campo de texto: onde o usuário digita a tarefa -->
+        <div>
+          <label for="task-input">Nova tarefa</label>
+          <input
+            type="text"
+            id="task-input"
+            placeholder="Ex: Estudar Engenharia de Prompt..."
+            maxlength="120"
+          />
+        </div>
+
+        <!-- Linha com seletor de prioridade e botão -->
+        <div class="form-row">
+
+          <!-- Seletor de prioridade -->
+          <div class="select-wrap">
+            <label for="priority-select">Prioridade</label>
+            <select id="priority-select">
+              <option value="alta">🔴 Alta</option>
+              <option value="media" selected>🟡 Média</option>
+              <option value="baixa">🟢 Baixa</option>
+            </select>
+          </div>
+
+          <!-- Botão de adicionar -->
+          <button class="add-btn" onclick="adicionarTarefa()">+ Adicionar</button>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- LISTA DE TAREFAS -->
+    <section class="list-section">
+
+      <div class="list-header">
+        <h2>Tarefas</h2>
+        <!-- Contador atualizado via JavaScript -->
+        <span class="counter" id="counter">0 tarefas</span>
+      </div>
+
+      <!-- As tarefas são inseridas aqui dinamicamente -->
+      <div id="todo-list">
+
+        <!-- Estado inicial: lista vazia -->
+        <div class="empty-state" id="empty-state">
+          <span>📋</span>
+          Nenhuma tarefa ainda.<br />Adicione a primeira acima!
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- =============================================
+       JAVASCRIPT — Lógica da aplicação
+       ============================================= -->
+  <script>
+    /*
+      VARIÁVEL DE CONTROLE
+      Armazena a quantidade de tarefas para o contador
+    */
+    let totalTarefas = 0;
+
+    /*
+      FUNÇÃO: adicionarTarefa()
+      Responsável por:
+      1. Ler o valor do campo de texto
+      2. Ler a prioridade selecionada
+      3. Validar se o campo não está vazio
+      4. Criar o elemento HTML da tarefa dinamicamente
+      5. Inserir na lista e atualizar o contador
+    */
+    function adicionarTarefa() {
+
+      // Pega o valor digitado e remove espaços extras
+      const input = document.getElementById('task-input');
+      const texto = input.value.trim();
+
+      // Validação: não adiciona tarefa vazia
+      if (texto === '') {
+        input.focus();
+        input.style.borderColor = '#ff4d6d';
+        setTimeout(() => input.style.borderColor = '', 1000);
+        return;
+      }
+
+      // Pega a prioridade escolhida no select
+      const prioridade = document.getElementById('priority-select').value;
+
+      // Mapeia a prioridade para um texto legível no badge
+      const labelPrioridade = {
+        alta:  '🔴 Alta',
+        media: '🟡 Média',
+        baixa: '🟢 Baixa'
+      };
+
+      // Cria o elemento <div> que representa a tarefa
+      const item = document.createElement('div');
+      item.classList.add('todo-item', `prioridade-${prioridade}`);
+
+      // Define o HTML interno do item da tarefa
+      item.innerHTML = `
+        <!-- Botão de marcar como concluída -->
+        <button class="check-btn" onclick="concluirTarefa(this)" title="Marcar como concluída">✓</button>
+
+        <!-- Texto da tarefa -->
+        <span class="task-text">${texto}</span>
+
+        <!-- Badge de prioridade com cor condicional -->
+        <span class="badge">${labelPrioridade[prioridade]}</span>
+
+        <!-- Botão de remover a tarefa -->
+        <button class="remove-btn" onclick="removerTarefa(this)" title="Remover tarefa">✕</button>
+      `;
+
+      // Esconde o estado vazio se existir
+      const emptyState = document.getElementById('empty-state');
+      if (emptyState) emptyState.style.display = 'none';
+
+      // Insere o item no topo da lista
+      const lista = document.getElementById('todo-list');
+      lista.insertBefore(item, lista.firstChild);
+
+      // Limpa o campo de texto para próxima entrada
+      input.value = '';
+      input.focus();
+
+      // Atualiza o contador de tarefas
+      totalTarefas++;
+      atualizarContador();
+    }
+
+    /*
+      FUNÇÃO: concluirTarefa(botao)
+      Alterna o estado da tarefa entre concluída e pendente
+      Parâmetro: botao → o botão de check clicado
+    */
+    function concluirTarefa(botao) {
+      // Sobe até o item pai (todo-item)
+      const item = botao.closest('.todo-item');
+      // Alterna a classe "concluida" que aplica o estilo riscado
+      item.classList.toggle('concluida');
+    }
+
+    /*
+      FUNÇÃO: removerTarefa(botao)
+      Remove o item da lista e atualiza o contador
+      Parâmetro: botao → o botão de remover clicado
+    */
+    function removerTarefa(botao) {
+      const item = botao.closest('.todo-item');
+      // Animação de saída antes de remover
+      item.style.transition = 'opacity 0.2s, transform 0.2s';
+      item.style.opacity = '0';
+      item.style.transform = 'translateX(20px)';
+
+      setTimeout(() => {
+        item.remove();
+        totalTarefas--;
+        atualizarContador();
+
+        // Mostra estado vazio se não houver mais tarefas
+        const lista = document.getElementById('todo-list');
+        if (lista.querySelectorAll('.todo-item').length === 0) {
+          const emptyState = document.getElementById('empty-state');
+          if (emptyState) emptyState.style.display = '';
+        }
+      }, 200);
+    }
+
+    /*
+      FUNÇÃO: atualizarContador()
+      Atualiza o texto do contador de tarefas no cabeçalho da lista
+    */
+    function atualizarContador() {
+      const counter = document.getElementById('counter');
+      counter.textContent = totalTarefas === 1
+        ? '1 tarefa'
+        : `${totalTarefas} tarefas`;
+    }
+
+    /*
+      EVENT LISTENER: Adicionar tarefa ao pressionar Enter
+      Melhora a usabilidade sem precisar clicar no botão
+    */
+    document.getElementById('task-input').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') adicionarTarefa();
+    });
+  </script>
+
+</body>
+</html>
